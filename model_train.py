@@ -5,6 +5,7 @@ from torch import optim
 import matplotlib.pyplot as plt
 from torchvision.io import read_image
 from torchvision.transforms.functional import to_pil_image
+from torchvision.utils import draw_bounding_boxes
 import numpy as np
 
 def show(imgs):
@@ -24,13 +25,15 @@ def nll(y,y_hat):
 
 if torch.backends.cuda.is_built():
     device = torch.device('cuda:0')
+elif torch.backends.mps.is_built():
+    device = torch.device('mps')
 else:
     device =  torch.device('cpu') 
 
-data_loader=PennFudanDataLoader(True,32)
+data_loader=PennFudanDataLoader(True,8)
 model=GaussNet()
 model.to(device)
-num_epochs=100
+num_epochs=30
 optimizer = optim.SGD(model.parameters(), lr=1e-5,momentum=0.9)
 history=list()
 for epoch in range(num_epochs):
@@ -59,4 +62,4 @@ m=Normal(theta[0],theta[1])
 boxes=m.sample_n(10).squeeze(1)
 boxes = torch.stack([boxes[:,0]*w,boxes[:,1]*h,boxes[:,2]*w,boxes[:,3]*h],axis=0)
 boxes=torch.transpose(boxes,0,1).to(int)
-results = draw_bounding_boxes(image, boxes, width=5)
+#results = draw_bounding_boxes(image, boxes, width=5)

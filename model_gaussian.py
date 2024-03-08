@@ -53,6 +53,8 @@ class GaussNet(nn.Module):
         input=torch.rand(1,3,224,224)
         with torch.no_grad():
             output=self.feature_net(input)
+        for param in self.feature_net.parameters():
+            param.requires_grad = False
         input_dim = output.shape[1:][0]
         hidden_dim=512
         self.head_net = GaussHeadNet(input_dim,hidden_dim)
