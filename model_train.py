@@ -4,7 +4,7 @@ from torch.distributions.normal import Normal
 from torch import optim
 import matplotlib.pyplot as plt
 from torchvision.io import read_image
-from torchvision.ops import box_convert
+from torchvision.ops import box_convert,remove_small_boxes
 from torchvision.transforms.functional import to_pil_image
 from torchvision.utils import draw_bounding_boxes
 import numpy as np
@@ -88,8 +88,10 @@ def predict(image_path,model):
     scores=-1.0*m.log_prob(boxes).mean(axis=1)
     scores=(scores-torch.min(scores))/(torch.max(scores)-torch.min(scores))
     idx=soft_nms_pytorch(boxes,scores,thresh=0.2,cuda=1)
+    boxes=boxes[idx]
+    idx=remove_small_boxes(boxes,min_size=300)
     results = draw_bounding_boxes(image, boxes[idx], width=2)
-    return results
+    return results,boxes[idx],scores[idx]
 
 def nll(y,y_hat):
     m = Normal(y_hat[0],y_hat[1])
@@ -128,6 +130,6 @@ for epoch in range(num_epochs):
         print("epoch: %d, train loss: %.6f" %(epoch, train_loss))
 
 
-results=predict("PennFudanPed/PNGImages/FudanPed00001.png",model)
+results,boxes,scores=predict("PennFudanPed/PNGImages/FudanPed00001.png",model)
 show(results)
 plt.show()

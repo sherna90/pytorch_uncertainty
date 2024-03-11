@@ -63,3 +63,48 @@ def PennFudanDataLoader(train,batch_size):
         collate_fn=collate_fn
     )
     return data_loader
+
+class TACODataset(torch.utils.data.Dataset):
+    def __init__(self, root, transforms):
+        self.root = root
+        self.transforms = transforms
+        # load all image files, sorting them to
+        # ensure that they are aligned
+        self.imgs = list(sorted(os.listdir(os.path.join(root, "PNGImages"))))
+        self.masks = list(sorted(os.listdir(os.path.join(root, "PedMasks"))))
+
+    def __getitem__(self, idx):
+        # load images and masks
+        img_path = os.path.join(self.root, "PNGImages", self.imgs[idx])
+        mask_path = os.path.join(self.root, "PedMasks", self.masks[idx])
+        img = read_image(img_path)
+        w,h=img.shape[1:]
+        mask = read_image(mask_path)
+        obj_ids = torch.unique(mask)
+        obj_ids = obj_ids[1:]
+        num_objs = len(obj_ids)
+        masks = (mask == obj_ids[:, None, None]).to(dtype=torch.uint8)
+        # get bounding box coordinates for each mask
+        boxes = masks_to_boxes(masks)
+        num_boxes=boxes.shape[0]
+        target = torch.stack([boxes[:,0]/w,boxes[:,1]/h,boxes[:,2]/w,boxes[:,3]/h],axis=0)
+        target=torch.transpose(target,0,1)
+        img=img.repeat(num_boxes,1,1,1)
+        if self.transforms is not None:
+            img, target = self.transforms(img, target)
+
+        return img, target
+
+    def __len__(self):
+        return len(self.imgs)
+    
+def PennFudanDataLoader(train,batch_size):
+    dataset=PennFudanDataset('PennFudanPed',get_transform(train=train))
+    data_loader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=True,
+        num_workers=0,
+        collate_fn=collate_fn
+    )
+    return data_loader
