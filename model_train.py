@@ -107,7 +107,7 @@ elif torch.backends.mps.is_built():
 else:
     device =  torch.device('cpu') 
 
-data_loader=PennFudanDataLoader(True,8)
+data_loader=TACODataLoader(True,8)
 model=GaussNet()
 model.to(device)
 num_epochs=30
@@ -130,6 +130,6 @@ for epoch in range(num_epochs):
         print("epoch: %d, train loss: %.6f" %(epoch, train_loss))
 
 
-results,boxes,scores=predict("PennFudanPed/PNGImages/FudanPed00001.png",model)
-show(results)
-plt.show()
+#results,boxes,scores=predict("PennFudanPed/PNGImages/FudanPed00001.png",model)
+#show(results)
+#plt.show()
