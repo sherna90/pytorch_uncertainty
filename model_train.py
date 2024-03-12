@@ -107,7 +107,7 @@ elif torch.backends.mps.is_built():
 else:
     device =  torch.device('cpu') 
 
-data_loader=TACODataLoader(True,8)
+data_loader=TACODataLoader(True,32)
 model=GaussNet()
 model.to(device)
 num_epochs=30
