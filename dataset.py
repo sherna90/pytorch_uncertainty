@@ -99,6 +99,7 @@ class TACODataset(torch.utils.data.Dataset):
         return len(self.imgs)
     
 def TACODataLoader(train,batch_size):
+    #dataset=TACODataset('/home/tui/code/TACO',get_transform(train=train))
     dataset=TACODataset('/media/sergio/45B9-67F2/code/TACO',get_transform(train=train))
     data_loader = torch.utils.data.DataLoader(
         dataset,
@@ -142,7 +143,8 @@ class UAVVasteDataset(torch.utils.data.Dataset):
         return len(self.imgs)
     
 def UAVVasteDataLoader(train,batch_size):
-    dataset=UAVVasteDataset('/media/sergio/45B9-67F2/code/UAVVaste',get_transform(train=train))
+    dataset=UAVVasteDataset('/home/tui/code/UAVVaste',get_transform(train=train))
+    #dataset=UAVVasteDataset('/media/sergio/45B9-67F2/code/UAVVaste',get_transform(train=train))
     data_loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,
