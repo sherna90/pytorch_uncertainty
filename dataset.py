@@ -108,3 +108,46 @@ def TACODataLoader(train,batch_size):
         collate_fn=collate_fn
     )
     return data_loader
+
+class UAVVasteDataset(torch.utils.data.Dataset):
+    def __init__(self, root, transforms):
+        self.root = root
+        self.transforms = transforms
+        # load all image files, sorting them to
+        # ensure that they are aligned
+        annotations = json.load(open(os.path.join(self.root, "annotations", "annotations.json"),"r"))
+        df_images=pd.DataFrame(annotations['images'])
+        self.imgs = df_images.file_name.to_list()
+        self.annotations=pd.DataFrame(annotations['annotations'])
+
+    def __getitem__(self, idx):
+        # load images and masks
+        img_path = os.path.join(self.root, "images", self.imgs[idx])
+        img = read_image(img_path)
+        w,h=img.shape[1:]
+        boxes = self.annotations.loc[self.annotations.image_id==idx].bbox.values
+        # get bounding box coordinates for each mask
+        boxes = np.stack([b for b in boxes])
+        boxes=box_convert(torch.Tensor(boxes), 'xywh', 'xyxy')
+        num_boxes=boxes.shape[0]
+        target = torch.stack([boxes[:,0]/w,boxes[:,1]/h,boxes[:,2]/w,boxes[:,3]/h],axis=0)
+        target=torch.transpose(target,0,1)
+        img=img.repeat(num_boxes,1,1,1)
+        if self.transforms is not None:
+            img, target = self.transforms(img, target)
+
+        return img, target
+
+    def __len__(self):
+        return len(self.imgs)
+    
+def UAVVasteDataLoader(train,batch_size):
+    dataset=UAVVasteDataset('/media/sergio/45B9-67F2/code/UAVVaste',get_transform(train=train))
+    data_loader = torch.utils.data.DataLoader(
+        dataset,
+        batch_size=batch_size,
+        shuffle=train,
+        num_workers=0,
+        collate_fn=collate_fn
+    )
+    return data_loader

@@ -1,5 +1,22 @@
 import torch
+from torch.distributions.normal import Normal
+import matplotlib.pyplot as plt
+from torchvision.io import read_image
+from torchvision.ops import box_convert,remove_small_boxes
+from torchvision.transforms.functional import to_pil_image
+from torchvision.utils import draw_bounding_boxes
 import numpy as np
+
+def show(imgs):
+    if not isinstance(imgs, list):
+        imgs = [imgs]
+    fig, axs = plt.subplots(ncols=len(imgs), squeeze=False)
+    for i, img in enumerate(imgs):
+        img = img.detach()
+        img = to_pil_image(img)
+        axs[0, i].imshow(np.asarray(img))
+        axs[0, i].set(xticklabels=[], yticklabels=[], xticks=[], yticks=[])
+
 def soft_nms_pytorch(dets, box_scores, sigma=0.5, thresh=0.001, cuda=0):
     """
     Build a pytorch implement of Soft NMS algorithm.
@@ -33,7 +50,6 @@ def soft_nms_pytorch(dets, box_scores, sigma=0.5, thresh=0.001, cuda=0):
         # intermediate parameters for later parameters exchange
         tscore = scores[i].clone()
         pos = i + 1
-
         if i != N - 1:
             maxscore, maxpos = torch.max(scores[pos:], dim=0)
             if tscore < maxscore:
@@ -55,3 +71,27 @@ def soft_nms_pytorch(dets, box_scores, sigma=0.5, thresh=0.001, cuda=0):
     # select the boxes and keep the corresponding indexes
     keep = dets[:, 4][scores > thresh].int()
     return keep
+
+def predict(image_path,model):
+    image = read_image(image_path)
+    w,h=image.shape[1:]
+    with torch.no_grad():
+        theta=model(image.unsqueeze(0).to(device))
+    m=Normal(theta[0],theta[1])
+    boxes=m.sample_n(100).squeeze(1)
+    boxes = torch.stack([boxes[:,0]*w,boxes[:,1]*h,boxes[:,2]*w,boxes[:,3]*h],axis=0)
+    boxes=torch.transpose(boxes,0,1).to(int)
+    boxes=torch.abs(box_convert(boxes, 'xyxy', 'xywh'))
+    boxes=box_convert(boxes, 'xywh', 'xyxy')
+    scores=-1.0*m.log_prob(boxes).mean(axis=1)
+    scores=(scores-torch.min(scores))/(torch.max(scores)-torch.min(scores))
+    idx=soft_nms_pytorch(boxes,scores,thresh=0.2,cuda=1)
+    boxes=boxes[idx]
+    idx=remove_small_boxes(boxes,min_size=300)
+    results = draw_bounding_boxes(image, boxes[idx], width=2)
+    return results,boxes[idx],scores[idx]
+
+def gaussian_nll(y,y_hat):
+    m = Normal(y_hat[0],y_hat[1])
+    nll=-1.0*m.log_prob(y).mean()
+    return nll

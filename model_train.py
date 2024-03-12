@@ -8,6 +8,7 @@ from torchvision.ops import box_convert,remove_small_boxes
 from torchvision.transforms.functional import to_pil_image
 from torchvision.utils import draw_bounding_boxes
 import numpy as np
+import pickle 
 
 def show(imgs):
     if not isinstance(imgs, list):
@@ -98,8 +99,6 @@ def nll(y,y_hat):
     nll=-1.0*m.log_prob(y).mean()
     return nll
 
-
-
 if torch.backends.cuda.is_built():
     device = torch.device('cuda:0')
 elif torch.backends.mps.is_built():
@@ -107,10 +106,10 @@ elif torch.backends.mps.is_built():
 else:
     device =  torch.device('cpu') 
 
-data_loader=TACODataLoader(True,32)
-model=GaussNet()
+data_loader=TACODataLoader(True,16)
+model=GaussNet(backbone='resnet34')
 model.to(device)
-num_epochs=30
+num_epochs=10
 optimizer = optim.SGD(model.parameters(), lr=1e-5,momentum=0.9)
 history=list()
 for epoch in range(num_epochs):
@@ -129,6 +128,28 @@ for epoch in range(num_epochs):
     if epoch % (num_epochs//10)==0:
         print("epoch: %d, train loss: %.6f" %(epoch, train_loss))
 
+
+model.save(model.state_dict(),'gaussian_resnet34.pth')
+
+test_data_loader=UAVVasteDataLoader(False,32)
+test_loss=0.0
+for iter,(input,target) in enumerate(data_loader):
+    input=torch.concatenate(input).to(device)
+    target=torch.concatenate(target).to(device)
+    with torch.no_grad():
+        output = model(input)
+    loss = nll(target,output)
+    test_loss+=loss.item()
+test_loss/=iter
+
+data = {
+    'train_loss': history,
+    'test_loss': test_loss,
+    'epochs': num_epochs
+}
+with open('gaussian_resnet34.pickle', 'wb') as f:
+    # Pickle the 'data' dictionary using the highest protocol available.
+    pickle.dump(data, f)
 
 #results,boxes,scores=predict("PennFudanPed/PNGImages/FudanPed00001.png",model)
 #show(results)
