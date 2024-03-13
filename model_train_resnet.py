@@ -18,10 +18,10 @@ elif torch.backends.mps.is_built():
 else:
     device =  torch.device('cpu') 
 
-data_loader=TACODataLoader(True,16)
+data_loader=TACODataLoader(True,32)
 model=GaussNet(backbone='resnet34')
 model.to(device)
-num_epochs=10
+num_epochs=100
 optimizer = optim.SGD(model.parameters(), lr=1e-5,momentum=0.9)
 history=list()
 for epoch in range(num_epochs):
@@ -41,7 +41,7 @@ for epoch in range(num_epochs):
         print("epoch: %d, train loss: %.6f" %(epoch, train_loss))
 
 
-model.save(model.state_dict(),'gaussian_resnet34.pth')
+torch.save(model.state_dict(),'gaussian_resnet34.pth')
 
 test_data_loader=UAVVasteDataLoader(False,32)
 test_loss=0.0

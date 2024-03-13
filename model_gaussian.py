@@ -52,6 +52,8 @@ class GaussFeatureNet(nn.Module):
             self.body=create_feature_extractor(
                 mobilenet_v3_large(weights=self.weights), 
                 return_nodes={'features.16':'last_layer'})
+        for param in self.body.parameters():
+            param.requires_grad = False
         
 
     def forward(self, x):
