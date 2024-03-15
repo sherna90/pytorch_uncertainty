@@ -52,7 +52,7 @@ for iter,(input,target) in enumerate(test_data_loader):
         boxes=m.sample_n(num_samples).squeeze(1)
         metric=evaluate_ospa(boxes,labels,order)
         ospa_error.append(metric)
-print("backbone: {0}, num_samples: {1}, test OSPA (mean): {2}, test OSPA (std): {3}" %(backbone,num_samples, np.mean(ospa_error),np.std(ospa_error)))
+print("backbone: {0}, num_samples: {1}, test OSPA (mean): {2}, test OSPA (std): {3}".format(backbone,num_samples, np.mean(ospa_error),np.std(ospa_error)))
     
 data = {
     'test_ospa': ospa_error,
@@ -61,7 +61,7 @@ data = {
     'std_ospa': np.std(ospa_error)
 }
 
-with open(''.join(['eval_',backbone,'_','str(num_samples)','.pickle']), 'wb') as f:
+with open(''.join(['eval_',backbone,'_',str(num_samples),'.pickle']), 'wb') as f:
     # Pickle the 'data' dictionary using the highest protocol available.
     pickle.dump(data, f)       
     
