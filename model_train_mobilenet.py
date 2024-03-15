@@ -46,7 +46,7 @@ torch.save(model.state_dict(),'gaussian_mobilenet.pth')
 
 test_data_loader=UAVVasteDataLoader(False,32)
 test_loss=0.0
-for iter,(input,target) in enumerate(data_loader):
+for iter,(input,target) in enumerate(test_data_loader):
     input=torch.concatenate(input).to(device)
     target=torch.concatenate(target).to(device)
     with torch.no_grad():

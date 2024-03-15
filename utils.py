@@ -2,10 +2,11 @@ import torch
 from torch.distributions.normal import Normal
 import matplotlib.pyplot as plt
 from torchvision.io import read_image
-from torchvision.ops import box_convert,remove_small_boxes
+from torchvision.ops import box_convert,remove_small_boxes,box_iou
 from torchvision.transforms.functional import to_pil_image
 from torchvision.utils import draw_bounding_boxes
 import numpy as np
+from scipy.optimize import linear_sum_assignment
 
 def show(imgs):
     if not isinstance(imgs, list):
@@ -91,6 +92,19 @@ def predict(image_path,model):
     results = draw_bounding_boxes(image, boxes[idx], width=2)
     return results,boxes[idx],scores[idx]
 
+
+def evaluate_ospa(boxes,labels,order=2):
+    boxes=torch.abs(box_convert(boxes, 'xyxy', 'xywh'))
+    boxes=box_convert(boxes, 'xywh', 'xyxy')
+    cost_matrix=box_iou(boxes,labels).cpu().numpy()
+    row_ind, col_ind = linear_sum_assignment(cost_matrix,maximize=True)
+    # Length of longest set of states
+    n = max(boxes.shape[0], labels.shape[0])
+    # Calculate metric
+    distance = ((1/n) * np.sum(cost_matrix[row_ind, col_ind]**order))**(1/order)
+    return distance
+
+    
 def gaussian_nll(y,y_hat):
     m = Normal(y_hat[0],y_hat[1])
     nll=-1.0*m.log_prob(y).mean()

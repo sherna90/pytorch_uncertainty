@@ -49,7 +49,7 @@ gc.collect()
 
 test_data_loader=UAVVasteDataLoader(False,8)
 test_loss=0.0
-for iter,(input,target) in enumerate(data_loader):
+for iter,(input,target) in enumerate(test_data_loader):
     input=torch.concatenate(input).to(device)
     target=torch.concatenate(target).to(device)
     with torch.no_grad():
