@@ -99,7 +99,7 @@ def evaluate_ospa(boxes,labels,order=2):
     cost_matrix=box_iou(boxes,labels).cpu().numpy()
     row_ind, col_ind = linear_sum_assignment(cost_matrix,maximize=True)
     # Length of longest set of states
-    n = max(boxes.shape[0], labels.shape[0])
+    n = labels.shape[0]
     # Calculate metric
     distance = ((1/n) * np.sum(cost_matrix[row_ind, col_ind]**order))**(1/order)
     return distance
