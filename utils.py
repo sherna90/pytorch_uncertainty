@@ -109,3 +109,8 @@ def gaussian_nll(y,y_hat):
     m = Normal(y_hat[0],y_hat[1])
     nll=-1.0*m.log_prob(y).mean()
     return nll
+
+def gaussian_entropy(y_hat):
+    m = Normal(y_hat[0],y_hat[1])
+    entropy=m.entropy().sum()
+    return entropy

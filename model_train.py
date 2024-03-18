@@ -33,6 +33,7 @@ def train_model(backbone):
     num_epochs=100
     optimizer = optim.SGD(model.parameters(), lr=1e-5,momentum=0.9)
     history=list()
+    train_entropy=list()
     print('-------------------------------------------')
     for epoch in range(num_epochs):
         train_loss=0.0
@@ -42,30 +43,38 @@ def train_model(backbone):
             optimizer.zero_grad()
             output = model(input)
             loss = gaussian_nll(target,output)
+            entropy = gaussian_entropy(output)
             loss.backward()
             optimizer.step()
             train_loss+=loss.item()
+            train_entropy.append(entropy.item())
         train_loss/=iter
         history.append(train_loss)
         if epoch % (num_epochs//10)==0:
             print("epoch: %d, train loss: %.6f" %(epoch, train_loss))
 
-
+    print("-----------------------------------------------------------------")
+    print("backbone: {0}, train entropy (mean): {2}, train entropy (std): {3}".format(backbone, np.mean(train_entropy),np.std(train_entropy)))
     torch.save(model.state_dict(),''.join(['gaussian_',backbone,'.pth']))
 
     test_data_loader=UAVVasteDataLoader(False,32)
     test_loss=0.0
+    test_entropy=list()
     for iter,(input,target) in enumerate(test_data_loader):
         input=torch.concatenate(input).to(device)
         target=torch.concatenate(target).to(device)
         with torch.no_grad():
             output = model(input)
         loss = gaussian_nll(target,output)
+        entropy = gaussian_entropy(output)
+        test_entropy.append(entropy.item())
         test_loss+=loss.item()
     test_loss/=iter
-    print('test loss : {0}'.format(test_loss))
+    print("backbone: {0}, test entropy (mean): {2}, test entropy (std): {3}".format(backbone, np.mean(test_entropy),np.std(test_entropy)))
     data = {
         'train_loss': history,
+        'train_entropy':train_entropy,
+        'test_entropy':test_entropy,
         'test_loss': test_loss,
         'epochs': num_epochs
     }
