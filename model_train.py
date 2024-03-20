@@ -54,7 +54,7 @@ def train_model(backbone):
             print("epoch: %d, train loss: %.6f" %(epoch, train_loss))
 
     print("-----------------------------------------------------------------")
-    print("backbone: {0}, train entropy (mean): {2}, train entropy (std): {3}".format(backbone, np.mean(train_entropy),np.std(train_entropy)))
+    print("backbone: {0}, train entropy (mean): {1}, train entropy (std): {2}".format(backbone, np.mean(train_entropy),np.std(train_entropy)))
     torch.save(model.state_dict(),''.join(['gaussian_',backbone,'.pth']))
 
     test_data_loader=UAVVasteDataLoader(False,32)
@@ -70,7 +70,7 @@ def train_model(backbone):
         test_entropy.append(entropy.item())
         test_loss+=loss.item()
     test_loss/=iter
-    print("backbone: {0}, test entropy (mean): {2}, test entropy (std): {3}".format(backbone, np.mean(test_entropy),np.std(test_entropy)))
+    print("backbone: {0}, test entropy (mean): {1}, test entropy (std): {2}".format(backbone, np.mean(test_entropy),np.std(test_entropy)))
     data = {
         'train_loss': history,
         'train_entropy':train_entropy,
