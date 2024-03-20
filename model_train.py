@@ -47,7 +47,8 @@ def train_model(backbone):
             loss.backward()
             optimizer.step()
             train_loss+=loss.item()
-            train_entropy.append(entropy.item())
+            if epoch==num_epochs-1:
+                train_entropy.append(entropy.item())
         train_loss/=iter
         history.append(train_loss)
         if epoch % (num_epochs//10)==0:
