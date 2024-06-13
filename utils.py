@@ -7,6 +7,7 @@ from torchvision.transforms.functional import to_pil_image
 from torchvision.utils import draw_bounding_boxes
 import numpy as np
 from scipy.optimize import linear_sum_assignment
+import cv2
 
 def show(imgs):
     if not isinstance(imgs, list):
@@ -114,3 +115,10 @@ def gaussian_entropy(y_hat):
     m = Normal(y_hat[0],y_hat[1])
     entropy=m.entropy().sum()
     return entropy
+
+def regular_theta(theta, mode='180', start=-np.pi/2):
+    assert mode in ['360', '180']
+    cycle = 2 * np.pi if mode == '360' else np.pi
+    theta = theta - start
+    theta = theta % cycle
+    return theta + start
