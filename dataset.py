@@ -98,8 +98,11 @@ class PennFudanRotatedDataset(torch.utils.data.Dataset):
         return len(self.imgs)
 
 
-def PennFudanDataLoader(train,batch_size):
-    dataset=PennFudanDataset('PennFudanPed',get_transform(train=train))
+def PennFudanDataLoader(train,batch_size,rotated=False):
+    if rotated:
+        dataset=PennFudanRotatedDataset('PennFudanPed',get_transform(train=train))
+    else:    
+        dataset=PennFudanDataset('PennFudanPed',get_transform(train=train))
     data_loader = torch.utils.data.DataLoader(
         dataset,
         batch_size=batch_size,

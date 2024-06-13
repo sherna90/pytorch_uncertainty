@@ -12,6 +12,20 @@ from torchvision.models.feature_extraction import create_feature_extractor
 
 import os
 
+class GaussHeadNetRotated(nn.Module):
+    def __init__(self, input_dim,hidden_dim):
+        super(GaussHeadNet,self).__init__()
+
+        self.fc1_mean = nn.Linear(input_dim, hidden_dim)
+        self.fc2_mean = nn.Linear(hidden_dim, 5)
+
+    def forward(self, x_feature):
+        # (x_feature has shape: (batch_size, hidden_dim))
+
+        mean = F.relu(self.fc1_mean(x_feature))  # (shape: (batch_size, hidden_dim))
+        mean = self.fc2_mean(mean)  # (shape: batch_size, 1))
+        return mean
+    
 class GaussHeadNet(nn.Module):
     def __init__(self, input_dim,hidden_dim):
         super(GaussHeadNet,self).__init__()
@@ -64,7 +78,7 @@ class GaussFeatureNet(nn.Module):
 
 
 class GaussNet(nn.Module):
-    def __init__(self,backbone):
+    def __init__(self,backbone,rotated=False):
         super(GaussNet, self).__init__()
         self.feature_net = GaussFeatureNet(backbone)
         input=torch.rand(1,3,224,224)
@@ -72,7 +86,10 @@ class GaussNet(nn.Module):
             output=self.feature_net(input)
         input_dim = output.shape[1:][0]
         hidden_dim=512
-        self.head_net = GaussHeadNet(input_dim,hidden_dim)
+        if rotated:
+            self.head_net = GaussHeadNetRotated(input_dim,hidden_dim)
+        else:
+            self.head_net = GaussHeadNet(input_dim,hidden_dim)
 
     def forward(self, x):
         x_feature = self.feature_net(x) # (shape: (batch_size, hidden_dim))
